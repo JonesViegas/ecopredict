@@ -1,0 +1,6 @@
+datetime,local_datetime,location,parameter,value,unit,city,country,latitude,longitude,source_name
+2024-01-16T12:00:00Z,2024-01-16T09:00:00-03:00,Belem-Centro,pm25,22.5,µg/m³,Belem,Brazil,-1.4558,-48.4902,OpenAQ
+2024-01-16T12:00:00Z,2024-01-16T09:00:00-03:00,Belem-Centro,pm10,35.2,µg/m³,Belem,Brazil,-1.4558,-48.4902,OpenAQ
+2024-01-16T12:00:00Z,2024-01-16T09:00:00-03:00,Belem-Centro,no2,0.045,ppm,Belem,Brazil,-1.4558,-48.4902,OpenAQ
+2024-01-16T12:00:00Z,2024-01-16T09:00:00-03:00,Manaus-ZonaNorte,pm25,18.7,µg/m³,Manaus,Brazil,-3.0250,-59.9750,OpenAQ
+2024-01-16T12:00:00Z,2024-01-16T09:00:00-03:00,Manaus-ZonaNorte,pm10,28.3,µg/m³,Manaus,Brazil,-3.0250,-59.9750,OpenAQ

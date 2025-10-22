@@ -1,0 +1,82 @@
+:root {
+    --primary-color: #198754;
+    --secondary-color: #146c43;
+    --accent-color: #20c997;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.hero-section {
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("../images/amazon-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 150px 0;
+    text-align: center;
+}
+
+.aqi-scale {
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.aqi-level {
+    padding: 15px;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.aqi-level:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+.good { background-color: #00e400; }
+.moderate { background-color: #ffff00; color: #333; }
+.unhealthy-sensitive { background-color: #ff7e00; }
+.unhealthy { background-color: #ff0000; }
+.very-unhealthy { background-color: #8f3f97; }
+.hazardous { background-color: #7e0023; }
+
+.color-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.btn-success {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-success:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+footer {
+    margin-top: auto;
+}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Início - EcoPredict{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("{{ url_for('static', filename='images/amazon-bg.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 150px 0;
+        text-align: center;
+    }
+    
+    .aqi-scale {
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0;
+    }
+    
+    .aqi-level {
+        padding: 15px;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .good { background-color: #00e400; }
+    .moderate { background-color: #ffff00; color: #333; }
+    .unhealthy-sensitive { background-color: #ff7e00; }
+    .unhealthy { background-color: #ff0000; }
+    .very-unhealthy { background-color: #8f3f97; }
+    .hazardous { background-color: #7e0023; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4 mb-4">EcoPredict</h1>
+        <p class="lead mb-4">Sistema Inteligente de Previsão de Poluição e Qualidade do Ar</p>
+        <p class="mb-4">Protegendo a Amazônia através de monitoramento e análise preditiva</p>
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-success btn-lg me-2">
+                <i class="fas fa-user-plus"></i> Cadastre-se
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        {% else %}
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-tachometer-alt"></i> Ir para Dashboard
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- AQI Scale -->
+<section class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-4">Escala de Qualidade do Ar (AQI)</h2>
+            <div class="aqi-scale">
+                <div class="aqi-level good">0-50 - Boa</div>
+                <div class="aqi-level moderate">51-100 - Moderada</div>
+                <div class="aqi-level unhealthy-sensitive">101-150 - Insalubre para Grupos Sensíveis</div>
+                <div class="aqi-level unhealthy">151-200 - Insalubre</div>
+                <div class="aqi-level very-unhealthy">201-300 - Muito Insalubre</div>
+                <div class="aqi-level hazardous">301-500 - Perigosa</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard Preview -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Monitoramento em Tempo Real</h2>
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div id="map-preview" style="height: 400px; background: #e9ecef; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                    <p class="text-muted">Mapa interativo da qualidade do ar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="container my-5">
+    <div class="row">
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-cloud fa-3x text-success mb-3"></i>
+            <h4>Coleta de Dados</h4>
+            <p>Integração com fontes públicas como OpenAQ, INMET e NASA Earth Data</p>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-brain fa-3x text-success mb-3"></i>
+            <h4>Análise com IA</h4>
+            <p>Modelos de machine learning para previsão e identificação de padrões</p>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+            <h4>Dashboard Interativo</h4>
+            <p>Visualizações em tempo real e relatórios detalhados</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simulação simples do mapa
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapPreview = document.getElementById('map-preview');
+        
+        // Em produção, integrar com biblioteca de mapas como Leaflet ou Google Maps
+        mapPreview.innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-map-marked-alt fa-4x text-success mb-3"></i>
+                <h4>Mapa Interativo da Qualidade do Ar</h4>
+                <p class="text-muted">Clique em qualquer região para ver os indicadores de qualidade do ar</p>
+                <div class="mt-3">
+                    <button class="btn btn-success me-2" onclick="showRegionData('Manaus')">Manaus</button>
+                    <button class="btn btn-success me-2" onclick="showRegionData('Belém')">Belém</button>
+                    <button class="btn btn-success" onclick="showRegionData('Porto Velho')">Porto Velho</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    function showRegionData(region) {
+        alert(`Dados de ${region}:\nAQI: 45-120\nStatus: Boa a Insalubre\nClique em Login para ver dados detalhados.`);
+    }
+</script>
+{% endblock %}

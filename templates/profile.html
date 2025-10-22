@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil - EcoPredict{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0"><i class="fas fa-user-circle"></i> Meu Perfil</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Informações do Usuário -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <h5>Informações Pessoais</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%">Nome de usuário:</th>
+                                    <td>{{ current_user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ current_user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Conta criada em:</th>
+                                    <td>{{ current_user.created_at.strftime('%d/%m/%Y às %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tipo de conta:</th>
+                                    <td>
+                                        {% if current_user.is_admin %}
+                                            <span class="badge bg-danger">Administrador</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Usuário</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-3x text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Minhas Estatísticas</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <h4 class="text-primary" id="datasets-count">0</h4>
+                                    <small class="text-muted">Datasets</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4 class="text-success" id="analyses-count">0</h4>
+                                    <small class="text-muted">Análises</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <h4 class="text-info" id="reports-count">0</h4>
+                                    <small class="text-muted">Relatórios</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alterar Senha -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-lock"></i> Alterar Senha</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="change-password-form">
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label">Senha Atual</label>
+                                    <input type="password" class="form-control" id="current_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">Nova Senha</label>
+                                    <input type="password" class="form-control" id="new_password" required>
+                                    <div class="form-text">A senha deve ter pelo menos 6 caracteres.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm_password" class="form-label">Confirmar Nova Senha</label>
+                                    <input type="password" class="form-control" id="confirm_password" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Alterar Senha
+                                </button>
+                            </form>
+                            <div id="password-status" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar estatísticas do usuário
+    loadUserStats();
+    
+    // Configurar formulário de alteração de senha
+    document.getElementById('change-password-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        changePassword();
+    });
+});
+
+function loadUserStats() {
+    // Simular carregamento de estatísticas
+    setTimeout(() => {
+        document.getElementById('datasets-count').textContent = '3';
+        document.getElementById('analyses-count').textContent = '12';
+        document.getElementById('reports-count').textContent = '5';
+    }, 500);
+}
+
+function changePassword() {
+    const currentPassword = document.getElementById('current_password').value;
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const statusDiv = document.getElementById('password-status');
+    
+    // Validações básicas
+    if (newPassword.length < 6) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">A nova senha deve ter pelo menos 6 caracteres.</div>';
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">As senhas não coincidem.</div>';
+        return;
+    }
+    
+    // Simular envio para o servidor
+    statusDiv.innerHTML = '<div class="alert alert-info">Alterando senha...</div>';
+    
+    setTimeout(() => {
+        statusDiv.innerHTML = '<div class="alert alert-success">Senha alterada com sucesso!</div>';
+        
+        // Limpar formulário
+        document.getElementById('change-password-form').reset();
+    }, 1500);
+}
+</script>
+{% endblock %}

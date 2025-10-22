@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - EcoPredict{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-chart-bar"></i> Relatórios e Análises</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Gere relatórios detalhados sobre a qualidade do ar na região amazônica.</p>
+                    
+                    <!-- Gerar Relatórios -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5><i class="fas fa-file-pdf"></i> Gerar Relatório</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card text-center report-card" onclick="generateReport('daily')">
+                                        <div class="card-body">
+                                            <i class="fas fa-calendar-day fa-3x text-info mb-3"></i>
+                                            <h6>Relatório Diário</h6>
+                                            <small class="text-muted">Últimas 24 horas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card text-center report-card" onclick="generateReport('weekly')">
+                                        <div class="card-body">
+                                            <i class="fas fa-calendar-week fa-3x text-warning mb-3"></i>
+                                            <h6>Relatório Semanal</h6>
+                                            <small class="text-muted">Última semana</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card text-center report-card" onclick="generateReport('monthly')">
+                                        <div class="card-body">
+                                            <i class="fas fa-calendar-alt fa-3x text-danger mb-3"></i>
+                                            <h6>Relatório Mensal</h6>
+                                            <small class="text-muted">Últimos 30 dias</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="report-status" class="mt-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados do Relatório -->
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="fas fa-chart-line"></i> Resultados do Relatório</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="report-results">
+                                <p class="text-muted text-center">Selecione um tipo de relatório para gerar a análise</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .report-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .alert-box {
+        border-left: 4px solid;
+        padding: 10px 15px;
+        margin: 10px 0;
+    }
+    .alert-warning { border-color: #ffc107; background-color: #fffbf0; }
+    .alert-danger { border-color: #dc3545; background-color: #fdf2f2; }
+</style>
+
+<script>
+function generateReport(type) {
+    const statusDiv = document.getElementById('report-status');
+    const resultsDiv = document.getElementById('report-results');
+    
+    statusDiv.innerHTML = '<div class="alert alert-info">Gerando relatório... Aguarde.</div>';
+    resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-success" role="status"></div><p>Processando dados...</p></div>';
+    
+    fetch(`/api/generate-report?type=${type}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = `<div class="alert alert-success">Relatório ${type} gerado com sucesso!</div>`;
+                displayReportResults(data.report);
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger">Erro: ${data.message}</div>`;
+                resultsDiv.innerHTML = '<p class="text-muted text-center">Erro ao gerar relatório</p>';
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = `<div class="alert alert-danger">Erro: ${error}</div>`;
+            resultsDiv.innerHTML = '<p class="text-muted text-center">Erro de conexão</p>';
+        });
+}
+
+function displayReportResults(report) {
+    const resultsDiv = document.getElementById('report-results');
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>📊 Estatísticas Gerais</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Período:</strong> ${report.period}</p>
+                        <p><strong>Data inicial:</strong> ${new Date(report.start_date).toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Data final:</strong> ${new Date(report.end_date).toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Total de registros:</strong> ${report.total_records}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>🌡️ Métricas de Qualidade do Ar</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Parâmetro</th>
+                                    <th>Média</th>
+                                    <th>Máximo</th>
+                                    <th>Mínimo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>AQI</td>
+                                    <td>${report.stats.aqi.mean.toFixed(1)}</td>
+                                    <td>${report.stats.aqi.max.toFixed(1)}</td>
+                                    <td>${report.stats.aqi.min.toFixed(1)}</td>
+                                </tr>
+                                <tr>
+                                    <td>PM2.5</td>
+                                    <td>${report.stats.pm25.mean.toFixed(1)} µg/m³</td>
+                                    <td>${report.stats.pm25.max.toFixed(1)} µg/m³</td>
+                                    <td>${report.stats.pm25.min.toFixed(1)} µg/m³</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Adicionar alertas se existirem
+    if (report.alerts && report.alerts.length > 0) {
+        html += `<div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h6>⚠️ Alertas e Recomendações</h6>
+                    </div>
+                    <div class="card-body">`;
+        
+        report.alerts.forEach(alert => {
+            const alertClass = alert.type === 'warning' ? 'alert-warning' : 'alert-danger';
+            html += `
+                <div class="alert-box ${alertClass}">
+                    <strong>${alert.type === 'warning' ? '⚠️ Aviso' : '🚨 Alerta Crítico'}:</strong> 
+                    ${alert.message}
+                    ${alert.locations ? `<br><small><strong>Localizações:</strong> ${alert.locations.join(', ')}</small>` : ''}
+                </div>
+            `;
+        });
+        
+        html += `</div></div></div></div>`;
+    }
+    
+    // Adicionar recomendações
+    html += `
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6>💡 Recomendações</h6>
+                    </div>
+                    <div class="card-body">
+                        ${generateRecommendations(report)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultsDiv.innerHTML = html;
+}
+
+function generateRecommendations(report) {
+    const aqiMean = report.stats.aqi.mean;
+    const pm25Mean = report.stats.pm25.mean;
+    
+    let recommendations = [];
+    
+    if (aqiMean > 100) {
+        recommendations.push("🚨 Níveis de poluição elevados. Recomenda-se evitar atividades físicas ao ar livre.");
+    }
+    
+    if (pm25Mean > 35) {
+        recommendations.push("😷 Altos níveis de PM2.5. Considere usar máscaras em ambientes externos.");
+    }
+    
+    if (aqiMean < 50) {
+        recommendations.push("✅ Qualidade do ar boa. Condições ideais para atividades externas.");
+    }
+    
+    if (report.alerts && report.alerts.length > 0) {
+        recommendations.push("📢 Atenção aos alertas emitidos. Monitore as localizações críticas.");
+    }
+    
+    recommendations.push("🌳 Mantenha o monitoramento contínuo para identificar tendências.");
+    recommendations.push("🔍 Considere implementar medidas de mitigação nas áreas mais críticas.");
+    
+    return recommendations.map(rec => `<p>• ${rec}</p>`).join('');
+}
+
+// Adicionar efeitos de hover nos cards
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.report-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

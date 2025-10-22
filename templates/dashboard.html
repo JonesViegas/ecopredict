@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - EcoPredict{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    #map {
+        height: 500px;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> Filtros</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Região</label>
+                        <select class="form-select" id="region-filter">
+                            <option value="all">Todas as Regiões</option>
+                            <option value="manaus">Manaus</option>
+                            <option value="belem">Belém</option>
+                            <option value="porto-velho">Porto Velho</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Parâmetro</label>
+                        <select class="form-select" id="parameter-filter">
+                            <option value="aqi">AQI Geral</option>
+                            <option value="pm25">PM2.5</option>
+                            <option value="pm10">PM10</option>
+                            <option value="no2">NO₂</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success w-100" onclick="applyFilters()">
+                        <i class="fas fa-sync-alt"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Legenda AQI</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="color-box good me-2"></div>
+                        <small>0-50 - Boa</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="color-box moderate me-2"></div>
+                        <small>51-100 - Moderada</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="color-box unhealthy-sensitive me-2"></div>
+                        <small>101-150 - Insalubre</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="color-box unhealthy me-2"></div>
+                        <small>151+ - Muito Insalubre</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h6>AQI Médio</h6>
+                            <h3>68</h3>
+                            <small>Moderado</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h6>PM2.5</h6>
+                            <h3>25.3 µg/m³</h3>
+                            <small>Moderado</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h6>Temperatura</h6>
+                            <h3>28°C</h3>
+                            <small>Normal</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h6>Umidade</h6>
+                            <h3>78%</h3>
+                            <small>Alta</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mapa -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-map-marked-alt"></i> Mapa de Qualidade do Ar - Amazônia</h5>
+                </div>
+                <div class="card-body">
+                    <div id="map"></div>
+                </div>
+            </div>
+            
+            <!-- Gráficos -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-line"></i> Tendência AQI (7 dias)</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="trendChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-pie"></i> Distribuição de Poluentes</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pollutantChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+<script>
+    // Inicializar dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeDashboard();
+        loadMap();
+    });
+</script>
+{% endblock %}

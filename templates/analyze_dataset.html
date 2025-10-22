@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Analisar {{ dataset.name }} - EcoPredict{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-brain"></i> Análise com IA - {{ dataset.name }}</h4>
+                    <div>
+                        <a href="{{ url_for('data.view_dataset', dataset_id=dataset.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar aos Dados
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Informações do Dataset -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>📊 Dataset Selecionado</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <th>Nome:</th>
+                                    <td>{{ dataset.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Descrição:</th>
+                                    <td>{{ dataset.description or 'Sem descrição' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Criado em:</th>
+                                    <td>{{ dataset.created_at.strftime('%d/%m/%Y às %H:%M') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🚀 Ações de Machine Learning</h6>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-success" onclick="trainModels({{ dataset.id }})">
+                                    <i class="fas fa-robot"></i> Treinar Modelos com este Dataset
+                                </button>
+                                <button class="btn btn-info" onclick="runClusterAnalysis()">
+                                    <i class="fas fa-project-diagram"></i> Análise de Clusters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status do Treinamento -->
+                    <div id="training-status" class="mb-4"></div>
+
+                    <!-- Resultados dos Modelos -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>📈 Métricas dos Modelos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="model-metrics">
+                                        <p class="text-muted text-center">
+                                            Treine os modelos para ver as métricas de performance
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>🎯 Fazer Previsões</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="prediction-form">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">PM2.5</label>
+                                                <input type="number" class="form-control" name="pm25" value="15" step="0.1">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">PM10</label>
+                                                <input type="number" class="form-control" name="pm10" value="25" step="0.1">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">NO₂</label>
+                                                <input type="number" class="form-control" name="no2" value="0.02" step="0.001">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">O₃</label>
+                                                <input type="number" class="form-control" name="o3" value="0.05" step="0.001">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">Temperatura</label>
+                                                <input type="number" class="form-control" name="temperature" value="28" step="0.1">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">Umidade</label>
+                                                <input type="number" class="form-control" name="humidity" value="78" step="0.1">
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label">Modelo</label>
+                                            <select class="form-select" name="model_type">
+                                                <option value="random_forest">Random Forest</option>
+                                                <option value="linear_regression">Regressão Linear</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-bolt"></i> Fazer Previsão de AQI
+                                        </button>
+                                    </form>
+                                    <div id="prediction-result" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados da Análise de Clusters -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>🗺️ Análise de Clusters - Agrupamento por Poluição</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="cluster-results">
+                                        <p class="text-muted text-center">
+                                            Execute a análise de clusters para ver os grupos de localizações por padrões de poluição
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function trainModels(datasetId) {
+    const statusDiv = document.getElementById('training-status');
+    statusDiv.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            Treinando modelos com o dataset... Isso pode levar alguns segundos.
+        </div>
+    `;
+
+    fetch(`/api/dataset/${datasetId}/train`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h6>✅ ${data.message}</h6>
+                    <p><strong>Dataset:</strong> ${data.dataset_info.name}</p>
+                    <p><strong>Registros usados:</strong> ${data.dataset_info.records_used}</p>
+                    <p><strong>Features:</strong> ${data.dataset_info.features_used.join(', ')}</p>
+                </div>
+            `;
+            
+            displayModelMetrics(data.metrics);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h6>❌ Erro no treinamento</h6>
+                    <p>${data.message}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h6>❌ Erro de conexão</h6>
+                <p>${error}</p>
+            </div>
+        `;
+    });
+}
+
+function displayModelMetrics(metrics) {
+    const metricsDiv = document.getElementById('model-metrics');
+    
+    let html = '';
+    for (const [model, metric] of Object.entries(metrics)) {
+        const modelName = model === 'random_forest' ? 'Random Forest' : 'Regressão Linear';
+        const r2Color = metric.r2 > 0.7 ? 'text-success' : metric.r2 > 0.5 ? 'text-warning' : 'text-danger';
+        
+        html += `
+            <div class="mb-3">
+                <h6>${modelName}</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <small>MSE: ${metric.mse.toFixed(4)}</small>
+                    </div>
+                    <div class="col-6">
+                        <small class="${r2Color}">R²: ${metric.r2.toFixed(4)}</small>
+                    </div>
+                </div>
+                <div class="progress mb-2">
+                    <div class="progress-bar ${r2Color.replace('text', 'bg')}" 
+                         style="width: ${metric.r2 * 100}%">
+                        ${(metric.r2 * 100).toFixed(1)}%
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    metricsDiv.innerHTML = html;
+}
+
+function runClusterAnalysis() {
+    const resultsDiv = document.getElementById('cluster-results');
+    resultsDiv.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            Executando análise de clusters...
+        </div>
+    `;
+
+    fetch('/analysis/cluster-analysis')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayClusterResults(data.clusters);
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        ❌ Erro na análise: ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    ❌ Erro de conexão: ${error}
+                </div>
+            `;
+        });
+}
+
+function displayClusterResults(clusters) {
+    const resultsDiv = document.getElementById('cluster-results');
+    
+    // Agrupar por cluster
+    const clusterGroups = {};
+    clusters.forEach(item => {
+        if (!clusterGroups[item.cluster]) {
+            clusterGroups[item.cluster] = [];
+        }
+        clusterGroups[item.cluster].push(item);
+    });
+    
+    let html = '<div class="row">';
+    
+    for (const [clusterId, locations] of Object.entries(clusterGroups)) {
+        const levels = ['Baixa Poluição', 'Poluição Moderada', 'Alta Poluição', 'Poluição Extrema'];
+        const colors = ['success', 'warning', 'danger', 'dark'];
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-header bg-${colors[clusterId]} text-white">
+                        <strong>Cluster ${parseInt(clusterId)+1}</strong> - ${levels[clusterId]}
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+        `;
+        
+        locations.slice(0, 4).forEach(loc => {
+            html += `
+                <div class="col-6 mb-2">
+                    <small>
+                        <strong>${loc.location}</strong><br>
+                        AQI: ${loc.aqi.toFixed(1)}<br>
+                        PM2.5: ${loc.pm25 ? loc.pm25.toFixed(1) : 'N/A'}
+                    </small>
+                </div>
+            `;
+        });
+        
+        html += `
+                        </div>
+                        ${locations.length > 4 ? `<small class="text-muted">... e mais ${locations.length - 4} localizações</small>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+// Formulário de previsão
+document.getElementById('prediction-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = isNaN(value) ? value : parseFloat(value);
+    });
+    
+    const resultDiv = document.getElementById('prediction-result');
+    resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Processando...';
+    
+    fetch('/analysis/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const aqiColor = data.prediction <= 50 ? 'success' : 
+                           data.prediction <= 100 ? 'warning' : 
+                           data.prediction <= 150 ? 'orange' : 'danger';
+            
+            resultDiv.innerHTML = `
+                <div class="alert alert-${aqiColor}">
+                    <h6>🎯 Previsão Concluída</h6>
+                    <p><strong>Modelo:</strong> ${data.model_used === 'random_forest' ? 'Random Forest' : 'Regressão Linear'}</p>
+                    <h4>AQI Previsto: ${data.prediction.toFixed(1)}</h4>
+                    <small>Baseado nos parâmetros fornecidos</small>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger">❌ Erro: ${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        resultDiv.innerHTML = `<div class="alert alert-danger">❌ Erro: ${error}</div>`;
+    });
+});
+</script>
+
+<style>
+.bg-orange { background-color: #ff7e00 !important; }
+</style>
+{% endblock %}

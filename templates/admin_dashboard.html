@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Painel Admin - EcoPredict{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-cogs"></i> Painel de Administração</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Estatísticas do Sistema -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary">
+                                <div class="card-body">
+                                    <h6>Total de Usuários</h6>
+                                    <h3>{{ total_users }}</h3>
+                                    <small>Cadastrados no sistema</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success">
+                                <div class="card-body">
+                                    <h6>Datasets</h6>
+                                    <h3>{{ total_datasets }}</h3>
+                                    <small>Arquivos carregados</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info">
+                                <div class="card-body">
+                                    <h6>Dados de Qualidade do Ar</h6>
+                                    <h3>{{ total_aq_data }}</h3>
+                                    <small>Registros coletados</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning">
+                                <div class="card-body">
+                                    <h6>Uso de Armazenamento</h6>
+                                    <h3 id="storage-usage">0 MB</h3>
+                                    <small>Espaço em disco</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu de Administração -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-users"></i> Gerenciamento de Usuários</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>Gerencie contas de usuários, permissões e acessos ao sistema.</p>
+                                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-user-cog"></i> Gerenciar Usuários
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-database"></i> Dados do Sistema</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>Monitore o uso de dados, armazenamento e desempenho do sistema.</p>
+                                    <button class="btn btn-info btn-sm" onclick="loadSystemStats()">
+                                        <i class="fas fa-chart-line"></i> Ver Estatísticas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usuários Recentes -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-user-plus"></i> Usuários Recentes</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_users %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Usuário</th>
+                                                <th>Email</th>
+                                                <th>Data de Cadastro</th>
+                                                <th>Tipo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for user in recent_users %}
+                                                <tr>
+                                                    <td>{{ user.username }}</td>
+                                                    <td>{{ user.email }}</td>
+                                                    <td>{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                                    <td>
+                                                        {% if user.is_admin %}
+                                                            <span class="badge bg-danger">Admin</span>
+                                                        {% else %}
+                                                            <span class="badge bg-success">Usuário</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">Nenhum usuário cadastrado recentemente.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas do Sistema -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-chart-bar"></i> Estatísticas do Sistema</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="system-stats">
+                                <p class="text-muted">Carregando estatísticas do sistema...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function loadSystemStats() {
+    const statsDiv = document.getElementById('system-stats');
+    statsDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p>Carregando...</p></div>';
+    
+    fetch('/admin/system-stats')
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Atividade Recente (7 dias)</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Novos usuários:</td>
+                                <td><strong>${data.new_users_7d}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Novos datasets:</td>
+                                <td><strong>${data.new_datasets_7d}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Dados por Fonte</h6>
+                        <table class="table table-sm">
+            `;
+            
+            for (const [source, count] of Object.entries(data.data_by_source)) {
+                html += `<tr><td>${source}:</td><td><strong>${count}</strong> registros</td></tr>`;
+            }
+            
+            html += `</table></div></div>`;
+            statsDiv.innerHTML = html;
+            
+            // Atualizar uso de armazenamento
+            document.getElementById('storage-usage').textContent = data.total_storage_mb + ' MB';
+        })
+        .catch(error => {
+            statsDiv.innerHTML = '<div class="alert alert-danger">Erro ao carregar estatísticas: ' + error + '</div>';
+        });
+}
+
+// Carregar estatísticas automaticamente
+document.addEventListener('DOMContentLoaded', function() {
+    loadSystemStats();
+});
+</script>
+{% endblock %}

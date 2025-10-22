@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Fontes de Dados - EcoPredict{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-cloud-download-alt"></i> Fontes de Dados Externas</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Conecte-se a fontes públicas de dados ambientais para enriquecer sua análise.</p>
+                    
+                    <!-- OpenAQ -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5><i class="fas fa-globe-americas"></i> OpenAQ</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Dados de qualidade do ar de estações de monitoramento em todo o mundo.</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Localização</label>
+                                        <select class="form-select" id="openaq-location">
+                                            <option value="Manaus">Manaus</option>
+                                            <option value="Belem">Belém</option>
+                                            <option value="Porto Velho">Porto Velho</option>
+                                            <option value="Rio Branco">Rio Branco</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Número de Registros</label>
+                                        <input type="number" class="form-control" id="openaq-limit" value="100" min="1" max="1000">
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-info" onclick="fetchOpenAQData()">
+                                <i class="fas fa-download"></i> Buscar Dados do OpenAQ
+                            </button>
+                            <div id="openaq-status" class="mt-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- INMET -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5><i class="fas fa-cloud-sun"></i> INMET - Instituto Nacional de Meteorologia</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Dados meteorológicos de estações do INMET na região amazônica.</p>
+                            <div class="mb-3">
+                                <label class="form-label">Código da Estação</label>
+                                <input type="text" class="form-control" id="inmet-station" value="A001" placeholder="Ex: A001">
+                                <div class="form-text">Códigos comuns: A001 (Manaus), A002 (Belém), A003 (Porto Velho)</div>
+                            </div>
+                            <button class="btn btn-warning" onclick="fetchINMETData()">
+                                <i class="fas fa-download"></i> Buscar Dados do INMET
+                            </button>
+                            <div id="inmet-status" class="mt-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dados Recentes -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-history"></i> Dados Recentes Coletados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-data">
+                                <p class="text-muted">Nenhum dado coletado recentemente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fetchOpenAQData() {
+    const location = document.getElementById('openaq-location').value;
+    const limit = document.getElementById('openaq-limit').value;
+    const statusDiv = document.getElementById('openaq-status');
+    
+    statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Buscando dados...';
+    
+    fetch(`/api/fetch-openaq-data?location=${location}&limit=${limit}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadRecentData();
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = `<div class="alert alert-danger">Erro: ${error}</div>`;
+        });
+}
+
+function fetchINMETData() {
+    const station = document.getElementById('inmet-station').value;
+    const statusDiv = document.getElementById('inmet-status');
+    
+    statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Buscando dados...';
+    
+    fetch(`/api/fetch-inmet-data?station=${station}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadRecentData();
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = `<div class="alert alert-danger">Erro: ${error}</div>`;
+        });
+}
+
+function loadRecentData() {
+    // Simular carregamento de dados recentes
+    const recentDiv = document.getElementById('recent-data');
+    recentDiv.innerHTML = `
+        <div class="list-group">
+            <div class="list-group-item">
+                <h6>Manaus - Centro</h6>
+                <small class="text-muted">AQI: 45 | PM2.5: 12.5 µg/m³ | Fonte: OpenAQ</small>
+            </div>
+            <div class="list-group-item">
+                <h6>Estação A001 - INMET</h6>
+                <small class="text-muted">Temp: 28°C | Umidade: 78% | Fonte: INMET</small>
+            </div>
+        </div>
+    `;
+}
+
+// Carregar dados recentes ao abrir a página
+document.addEventListener('DOMContentLoaded', loadRecentData);
+</script>
+{% endblock %}
