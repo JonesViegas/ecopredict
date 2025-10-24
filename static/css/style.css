@@ -10,14 +10,14 @@ body {
 }
 
 .hero-section {
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("../images/amazon-bg.jpg");
+    /* Alterado de 0.6 para 0.3 para um efeito mais suave */
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url("../images/amazon-bg.jpg");
     background-size: cover;
     background-position: center;
     color: white;
     padding: 150px 0;
     text-align: center;
 }
-
 .aqi-scale {
     border-radius: 10px;
     overflow: hidden;

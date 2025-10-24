@@ -13,31 +13,28 @@ def index():
 @dashboard_bp.route('/api/air-quality-data')
 @login_required
 def air_quality_data():
-    # Dados de exemplo - em produção, buscar do banco
-    data = [
-        {
-            'location': 'Manaus',
-            'latitude': -3.1190,
-            'longitude': -60.0217,
-            'aqi': 45,
-            'pm25': 12.5,
-            'status': 'Boa'
-        },
-        {
-            'location': 'Belém',
-            'latitude': -1.4558,
-            'longitude': -48.4902,
-            'aqi': 68,
-            'pm25': 20.1,
-            'status': 'Moderada'
-        },
-        {
-            'location': 'Porto Velho',
-            'latitude': -8.7612,
-            'longitude': -63.9005,
-            'aqi': 120,
-            'pm25': 45.3,
-            'status': 'Insalubre'
-        }
-    ]
+    # Busca os 100 registros mais recentes do banco de dados
+    latest_data = AirQualityData.query.order_by(AirQualityData.timestamp.desc()).limit(100).all()
+    
+    data = []
+    locations_added = set()  # Usado para evitar locais duplicados no mapa
+
+    for record in latest_data:
+        if record.location not in locations_added:
+            status = 'Boa'
+            if record.aqi and record.aqi > 100:
+                status = 'Insalubre'
+            elif record.aqi and record.aqi > 50:
+                status = 'Moderada'
+            
+            data.append({
+                'location': record.location,
+                'latitude': record.latitude,
+                'longitude': record.longitude,
+                'aqi': record.aqi,
+                'pm25': record.pm25,
+                'status': status
+            })
+            locations_added.add(record.location)
+            
     return jsonify(data)
